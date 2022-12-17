@@ -1,9 +1,10 @@
 use std::thread::current;
 
 const DEFAULT_WEIGHT: f64 = 1.0;
+const DEFAULT_VALUE: f64 = 1.0; // FIXME: what should this be?
 
 fn main() {
-    let network = create_network();
+    let network = create_network(vec![3,4,4,3]);
 }
 
 fn create_network(nodes_per_layer: Vec<usize>) -> Vec<&'static Node> {
@@ -24,20 +25,22 @@ fn create_network(nodes_per_layer: Vec<usize>) -> Vec<&'static Node> {
     // output case
     tail/return prev_layer
      */
+
+    // input case
+    let mut prev_layer: Vec<&'static Node> = Vec::new();
+    // middle case
+    for node_count in nodes_per_layer {
+        prev_layer = create_layer(prev_layer, node_count); // without a semicolon will this evaluate as a tail?
+    }
+    prev_layer
+    // output case
+
 }
 
 fn create_layer(prev_layer: Vec<&'static Node>, node_count: usize) -> Vec<&'static Node> {
-    let current_layer: Vec<&'static Node> = Vec::with_capacity(node_count);
+    let mut current_layer: Vec<&'static Node> = Vec::with_capacity(node_count);
     for i in 0..node_count {
-        current_layer[i] = &Node::from_inputs(prev_layer)
-    }
-    current_layer
-}
-
-fn create_input_layer(node_count: usize) -> Vec<&'static Node> {
-    let current_layer: Vec<&'static Node> = Vec::with_capacity(node_count);
-    for i in 0..node_count {
-        current_layer[i] = &Node::new()
+        current_layer[i] = &Node::from_inputs(prev_layer);
     }
     current_layer
 }
@@ -45,6 +48,7 @@ fn create_input_layer(node_count: usize) -> Vec<&'static Node> {
 struct Node { // Neuron
     inputs: Vec<&'static Node>,
     weights: Vec<f64>,
+    value: f64 // FIXME: what type should this be?
 }
 
 impl Node {
@@ -52,22 +56,19 @@ impl Node {
         Self {
             inputs: Vec::new(),
             weights: Vec::new(),
-        }
-    }
-    fn new_input_node() -> Self {
-        Self {
-            // inputs: somehow just a value instead of Vec<Node>?
-            //weights: just 1? idk my brain fried
+            value: DEFAULT_VALUE,
         }
     }
     fn from_inputs(inputs: Vec<&'static Node>) -> Self {
-        let weights = Vec::new();
+        let mut weights = Vec::new();
+        let value = DEFAULT_VALUE;
         for i in 0..inputs.len() {
             weights.push(DEFAULT_WEIGHT);
         }
         Self {  
             inputs,
             weights,
+            value,
         }
     }
     fn add_input_node(&mut self, node: &'static Node) {
@@ -75,11 +76,11 @@ impl Node {
         self.weights.push(DEFAULT_WEIGHT);
     }
     fn evaluate(&self) {
+        
         // relu(sum(weights*inputs.evaluate()))
-        // FIXME: evaluate has to be different on input nodes
         let sum: f64;
         for i in 0..self.inputs.len() { //FIXME: make sure this looks good
-
+            // weight[i]*inputs[i] or some shit
         }
     }
 }
