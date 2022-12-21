@@ -1,29 +1,39 @@
 use crate::node::Node;
 
-pub struct Network {
-    pub input: Vec<Node>,
-    pub output: Vec<Node>,
+pub struct Network<'a> {
+    pub input: &'a Vec<Node<'a>>,
+    pub output: Vec<Node<'a>>,
 }
 
 // Private
-impl Network {
-    fn create_layer(prev_layer: &'static Vec<Node>, node_count: usize) -> Vec<Node> {
-        let mut current_layer: Vec<Node> = Vec::with_capacity(node_count);
+impl Network<'_> {
+    //Creates a vec of nodes that all contain the previous layer as an input
+    //Needs references to prev_layer and the number of nodes to create
+    fn create_layer<'a>(prev_layer: &'a  Vec<Node<'a>>, node_count: usize) -> Vec<Node<'a>> { 
+        let mut layer_nodes: Vec<Node> = Vec::with_capacity(node_count);
+        
         for i in 0..node_count {
-            current_layer[i] = Node::from_inputs(prev_layer);
+            layer_nodes[i] = Node::from_inputs(&prev_layer);
         }
-        current_layer
+        layer_nodes
     }
 }
 
-impl Network {
-    pub fn new(nodes_per_layer: Vec<usize>) -> Self {
-        let input: Vec<Node> = Vec::with_capacity(nodes_per_layer[0]);
-        let mut current_layer = Self::create_layer(&input, nodes_per_layer[1]);
-        for node_count in nodes_per_layer.iter().skip(2) {
-            current_layer = Self::create_layer(&current_layer, *node_count);
+impl <'a> Network<'a> {
+    pub fn new(input: &'a Vec<Node<'a>>, network_template: Vec<usize>) -> Self {
+        //creating empty input vec. To be filled in later
+
+
+        let mut mid_layer: Vec<Node<'a>> = Self::create_layer(&input, network_template[1]);
+
+        for node_count in network_template.iter().skip(2) {
+            // let layer_ref: &'a Vec<Node> = &current_layer;
+            let prev_mid_layer = mid_layer;
+            mid_layer = Self::create_layer(&prev_mid_layer, *node_count);
         }
-        let output = current_layer;
+
+        let output = mid_layer;
+
         Self {
             input,
             output,
