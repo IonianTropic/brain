@@ -13,21 +13,15 @@ fn main() {
     let network = Network::new(template);
 
     println!("input indices: ");
-    vprint(&network.inputs);
+    println!("{:?}", network.inputs);
 
     println!("output indices: ");
-    vprint(&network.outputs);
+    println!("{:?}", network.outputs);
 
     println!("node values: ");
-    vprint(&network.nodes);
+    println!("{:?}", network.nodes);
 }
 
-fn vprint<T: std::fmt::Display> (vec: &Vec<T>) {
-    for i in vec {
-        print!("{} ", i);
-    }
-    println!();
-}
 
 struct Network {
     inputs: Vec<usize>,
