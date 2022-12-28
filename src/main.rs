@@ -3,10 +3,9 @@ mod math;
 const DEFAULT_WEIGHT: f64 = 1.0;
 const DEFAULT_VALUE: f64 = 0.0;
 
-//TODO: evaluate() function
-//TODO: implement accessible Edges for evaluate()
+// TODO: evaluate() function
+// TODO: implement accessible Edges for evaluate()
 
-//TODO: implement modify inputs/get outputs function to get the values of stored indices
 fn main() {
     let template = vec![2,3,1];
 
@@ -26,23 +25,25 @@ fn main() {
 struct Network {
     inputs: Vec<usize>,
     outputs: Vec<usize>,
-    nodes: Vec<f64>,
+    nodes: Vec<Node>,
     edges: Vec<Edge>,
 }
 
 impl Network {
-    fn new(template: Vec<usize>) -> Self {
+    pub fn new(template: Vec<usize>) -> Self {
         // nodes
         let node_count = template.iter().sum();
-        let mut nodes: Vec<f64> = Vec::new();
+        let mut nodes: Vec<Node> = Vec::new();
         for _ in 0..node_count {
-            nodes.push(DEFAULT_VALUE);
+            nodes.push(Node::new());
         }
+
         // inputs
         let mut inputs = Vec::new();
         for idx in 0..template[0] {
             inputs.push(idx);
         }
+
         // outputs
         let mut outputs = Vec::new();
         for idx in node_count - template[template.len()-1]..node_count {
@@ -50,12 +51,10 @@ impl Network {
         }
 
         // layers
-        // EX with template <2,3,1>
-        // <<0,1>,<2,3,4>,<5>>
         let mut layer_map: Vec<Vec<usize>> = Vec::new();
         let mut node_idx: usize = 0;
 
-        for layer_nodes in template[0..].into_iter() {
+        for layer_nodes in template.iter() {
             let mut current_layer = Vec::new();
             for _ in 0..*layer_nodes {
                 current_layer.push(node_idx);
@@ -67,13 +66,14 @@ impl Network {
         // edging
         let mut edges: Vec<Edge> = Vec::new();
 
-        let prev_nodes_iter = layer_map[0..template.len()-1].into_iter(); //zero cost abstraction right?
+        let prev_nodes_iter = layer_map[0..template.len()-1].into_iter();
         let current_nodes_iter = layer_map[1..template.len()].into_iter();
 
-        // iterates over each adjacent pair of node layers and then the product of those two layers
-        for (prev, current) in prev_nodes_iter.zip(current_nodes_iter) {
+        for (idx, (prev, current)) in prev_nodes_iter.zip(current_nodes_iter).enumerate() {
             for (i, j) in itertools::iproduct!(prev, current) {
-                edges.push(Edge::new(*i, *j)); // Is it fine to dereference here?
+                edges.push(Edge::new(*i, *j));
+                nodes[*j].push_input(idx);
+                nodes[*i].push_output(idx);
             }
         }
 
@@ -83,6 +83,18 @@ impl Network {
             nodes,
             edges,
         }
+    }
+    fn set_inputs(&mut self, new_inputs: Vec<f64>) {
+        for (idx, input) in self.inputs.iter().enumerate() {
+            self.nodes[*input].value = new_inputs[idx];
+        }
+    }
+    fn eval(&mut self) {
+        // get output nodes
+        // for each of those:
+        //     relu(prev_nodes.sum())
+
+        //prev_nodes = nodes[edges[current_node.inputs[i]].start]
     }
 }
 
@@ -99,5 +111,38 @@ impl Edge {
             end,
             weight: DEFAULT_WEIGHT,
         }
+    }
+}
+
+#[derive(Debug)]
+struct Node {
+    value: f64,
+    inputs: Vec<usize>, // for edges: Vec<Edge>
+    outputs: Vec<usize>,
+}
+
+impl Node {
+    fn new() -> Self {
+        Self {
+            value: DEFAULT_VALUE,
+            inputs: Vec::new(),
+            outputs: Vec::new(),
+        }
+    }
+    
+    fn push_input(&mut self, idx: usize) {
+        self.inputs.push(idx);
+    }
+
+    fn push_output(&mut self, idx: usize) {
+        self.outputs.push(idx);
+    }
+
+    fn get_value(&self) -> f64 {
+        self.value
+    }
+
+    fn get_mut_value(&mut self) -> &mut f64 {
+        &mut self.value
     }
 }
